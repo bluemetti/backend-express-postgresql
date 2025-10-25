@@ -1,0 +1,715 @@
+_type: export
+__export_format: 4
+__export_date: 2025-10-25T16:00:00.000Z
+__export_source: insomnia.desktop.app:v2023.5.8
+
+# AMBIENTES DISPONÍVEIS:
+# - LOCAL: http://localhost:3001 (MongoDB Docker)
+# - PRODUCTION: http://localhost:3002 (MongoDB Atlas)
+# 
+# Altere a variável base_url abaixo conforme o ambiente:
+
+environment:
+  base_url_local: "http://localhost:3001"
+  base_url_atlas: "http://localhost:3002"
+  base_url: "{{ base_url_local }}"  # Altere aqui: base_url_local ou base_url_atlas
+  token: ""
+
+resources:
+  - _id: req_register_success
+    parentId: fld_auth
+    type: Request
+    name: 01 - Cadastro bem-sucedido
+    url: "{{ _.base_url }}/register"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "name": "João Silva",
+          "email": "joao.silva@email.com",
+          "password": "Senha@123"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    parameters: []
+    authentication: {}
+
+  - _id: req_register_duplicate
+    parentId: fld_auth
+    type: Request
+    name: 02 - Cadastro com email repetido
+    url: "{{ _.base_url }}/register"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "name": "Maria Santos",
+          "email": "joao.silva@email.com",
+          "password": "Senha@456"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    parameters: []
+    authentication: {}
+
+  - _id: req_register_invalid_password
+    parentId: fld_auth
+    type: Request
+    name: 03 - Cadastro com senha inválida (muito curta)
+    url: "{{ _.base_url }}/register"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "name": "Pedro Costa",
+          "email": "pedro.costa@email.com",
+          "password": "123"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    parameters: []
+    authentication: {}
+
+  - _id: req_register_invalid_email
+    parentId: fld_auth
+    type: Request
+    name: 04 - Cadastro com email inválido
+    url: "{{ _.base_url }}/register"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "name": "Ana Oliveira",
+          "email": "email-invalido",
+          "password": "Senha@789"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    parameters: []
+    authentication: {}
+
+  - _id: req_register_malformed
+    parentId: fld_auth
+    type: Request
+    name: 05 - Cadastro com JSON malformado
+    url: "{{ _.base_url }}/register"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "name": "Carlos Souza",
+          "email": "carlos.souza@email.com"
+          "password": "Senha@321"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    parameters: []
+    authentication: {}
+
+  - _id: req_login_success
+    parentId: fld_auth
+    type: Request
+    name: 06 - Login bem-sucedido
+    url: "{{ _.base_url }}/login"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "email": "joao.silva@email.com",
+          "password": "Senha@123"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    parameters: []
+    authentication: {}
+
+  - _id: req_login_invalid_password
+    parentId: fld_auth
+    type: Request
+    name: 07 - Login com senha inválida
+    url: "{{ _.base_url }}/login"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "email": "joao.silva@email.com",
+          "password": "SenhaErrada@123"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    parameters: []
+    authentication: {}
+
+  - _id: req_login_invalid_email
+    parentId: fld_auth
+    type: Request
+    name: 08 - Login com email inválido (formato)
+    url: "{{ _.base_url }}/login"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "email": "email-sem-arroba",
+          "password": "Senha@123"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    parameters: []
+    authentication: {}
+
+  - _id: req_login_malformed
+    parentId: fld_auth
+    type: Request
+    name: 09 - Login com JSON malformado
+    url: "{{ _.base_url }}/login"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "email": "joao.silva@email.com"
+          "password": "Senha@123"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    parameters: []
+    authentication: {}
+
+  - _id: req_protected_valid_token
+    parentId: fld_auth
+    type: Request
+    name: 10 - Acesso protegido com token válido
+    url: "{{ _.base_url }}/protected"
+    method: GET
+    body: {}
+    headers:
+      - name: Authorization
+        value: "Bearer {{ _.token }}"
+    parameters: []
+    authentication: {}
+
+  - _id: req_protected_no_token
+    parentId: fld_auth
+    type: Request
+    name: 11 - Acesso protegido sem token
+    url: "{{ _.base_url }}/protected"
+    method: GET
+    body: {}
+    headers: []
+    parameters: []
+    authentication: {}
+
+  - _id: req_protected_invalid_token
+    parentId: fld_auth
+    type: Request
+    name: 12 - Acesso protegido com token inválido
+    url: "{{ _.base_url }}/protected"
+    method: GET
+    body: {}
+    headers:
+      - name: Authorization
+        value: "Bearer token_invalido_xyz123"
+    parameters: []
+    authentication: {}
+
+  # ==========================================
+  # WORKOUT REQUESTS
+  # ==========================================
+
+  - _id: req_workout_create_success
+    parentId: fld_workouts
+    type: Request
+    name: 13 - Criar treino bem-sucedido
+    url: "{{ _.base_url }}/workouts"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "name": "Treino de Pernas",
+          "type": "strength",
+          "duration": 60,
+          "calories": 400,
+          "exercises": [
+            {
+              "name": "Agachamento",
+              "sets": 4,
+              "reps": 12,
+              "weight": 80
+            },
+            {
+              "name": "Leg Press",
+              "sets": 3,
+              "reps": 15,
+              "weight": 150
+            }
+          ],
+          "date": "2025-10-24T10:00:00Z",
+          "notes": "Treino intenso de pernas"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: Authorization
+        value: "Bearer {{ _.token }}"
+    parameters: []
+    authentication: {}
+
+  - _id: req_workout_create_cardio
+    parentId: fld_workouts
+    type: Request
+    name: 14 - Criar treino de cardio
+    url: "{{ _.base_url }}/workouts"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "name": "Corrida Matinal",
+          "type": "cardio",
+          "duration": 30,
+          "calories": 250,
+          "exercises": [
+            {
+              "name": "Corrida",
+              "distance": 5,
+              "time": 28
+            }
+          ],
+          "date": "2025-10-24T06:00:00Z",
+          "notes": "Corrida leve"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: Authorization
+        value: "Bearer {{ _.token }}"
+    parameters: []
+    authentication: {}
+
+  - _id: req_workout_list_all
+    parentId: fld_workouts
+    type: Request
+    name: 15 - Listar todos os treinos
+    url: "{{ _.base_url }}/workouts"
+    method: GET
+    body: {}
+    headers:
+      - name: Authorization
+        value: "Bearer {{ _.token }}"
+    parameters: []
+    authentication: {}
+
+  - _id: req_workout_list_filtered_type
+    parentId: fld_workouts
+    type: Request
+    name: 16 - Listar treinos filtrado por tipo (strength)
+    url: "{{ _.base_url }}/workouts?type=strength"
+    method: GET
+    body: {}
+    headers:
+      - name: Authorization
+        value: "Bearer {{ _.token }}"
+    parameters: []
+    authentication: {}
+
+  - _id: req_workout_list_filtered_duration
+    parentId: fld_workouts
+    type: Request
+    name: "17 - Listar treinos filtrado por duração (min 30, max 90)"
+    url: "{{ _.base_url }}/workouts?minDuration=30&maxDuration=90"
+    method: GET
+    body: {}
+    headers:
+      - name: Authorization
+        value: "Bearer {{ _.token }}"
+    parameters: []
+    authentication: {}
+
+  - _id: req_workout_get_by_id
+    parentId: fld_workouts
+    type: Request
+    name: 18 - Buscar treino por ID (SUBSTITUA O ID)
+    url: "{{ _.base_url }}/workouts/YOUR_WORKOUT_ID_HERE"
+    method: GET
+    body: {}
+    headers:
+      - name: Authorization
+        value: "Bearer {{ _.token }}"
+    parameters: []
+    authentication: {}
+
+  - _id: req_workout_update_put
+    parentId: fld_workouts
+    type: Request
+    name: 19 - Atualização completa (PUT) de treino
+    url: "{{ _.base_url }}/workouts/YOUR_WORKOUT_ID_HERE"
+    method: PUT
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "name": "Treino de Pernas Atualizado",
+          "type": "strength",
+          "duration": 75,
+          "calories": 500,
+          "exercises": [
+            {
+              "name": "Agachamento",
+              "sets": 5,
+              "reps": 10,
+              "weight": 90
+            },
+            {
+              "name": "Leg Press",
+              "sets": 4,
+              "reps": 12,
+              "weight": 170
+            },
+            {
+              "name": "Cadeira Extensora",
+              "sets": 3,
+              "reps": 15,
+              "weight": 50
+            }
+          ],
+          "date": "2025-10-24T10:00:00Z",
+          "notes": "Treino intenso de pernas - atualizado"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: Authorization
+        value: "Bearer {{ _.token }}"
+    parameters: []
+    authentication: {}
+
+  - _id: req_workout_update_patch
+    parentId: fld_workouts
+    type: Request
+    name: 20 - Atualização parcial (PATCH) de treino
+    url: "{{ _.base_url }}/workouts/YOUR_WORKOUT_ID_HERE"
+    method: PATCH
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "duration": 45,
+          "calories": 300,
+          "notes": "Treino reduzido por falta de tempo"
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: Authorization
+        value: "Bearer {{ _.token }}"
+    parameters: []
+    authentication: {}
+
+  - _id: req_workout_delete
+    parentId: fld_workouts
+    type: Request
+    name: 21 - Deletar treino
+    url: "{{ _.base_url }}/workouts/YOUR_WORKOUT_ID_HERE"
+    method: DELETE
+    body: {}
+    headers:
+      - name: Authorization
+        value: "Bearer {{ _.token }}"
+    parameters: []
+    authentication: {}
+
+  - _id: req_workout_stats
+    parentId: fld_workouts
+    type: Request
+    name: 22 - Estatísticas de treinos
+    url: "{{ _.base_url }}/workouts/stats"
+    method: GET
+    body: {}
+    headers:
+      - name: Authorization
+        value: "Bearer {{ _.token }}"
+    parameters: []
+    authentication: {}
+
+  # Casos de erro
+  - _id: req_workout_create_no_token
+    parentId: fld_workouts
+    type: Request
+    name: 23 - [ERRO] Criar treino sem token
+    url: "{{ _.base_url }}/workouts"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "name": "Treino Sem Token",
+          "type": "strength",
+          "duration": 60,
+          "exercises": [
+            {
+              "name": "Agachamento",
+              "sets": 4,
+              "reps": 12
+            }
+          ]
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+    parameters: []
+    authentication: {}
+
+  - _id: req_workout_create_invalid_token
+    parentId: fld_workouts
+    type: Request
+    name: 24 - [ERRO] Criar treino com token inválido
+    url: "{{ _.base_url }}/workouts"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "name": "Treino Token Inválido",
+          "type": "strength",
+          "duration": 60,
+          "exercises": [
+            {
+              "name": "Agachamento",
+              "sets": 4,
+              "reps": 12
+            }
+          ]
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: Authorization
+        value: "Bearer token_totalmente_invalido_xyz"
+    parameters: []
+    authentication: {}
+
+  - _id: req_workout_create_invalid_type
+    parentId: fld_workouts
+    type: Request
+    name: 25 - [ERRO] Criar treino com tipo inválido
+    url: "{{ _.base_url }}/workouts"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "name": "Treino Tipo Inválido",
+          "type": "natacao",
+          "duration": 60,
+          "exercises": [
+            {
+              "name": "Nado crawl",
+              "distance": 2
+            }
+          ]
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: Authorization
+        value: "Bearer {{ _.token }}"
+    parameters: []
+    authentication: {}
+
+  - _id: req_workout_create_no_exercises
+    parentId: fld_workouts
+    type: Request
+    name: 26 - [ERRO] Criar treino sem exercícios
+    url: "{{ _.base_url }}/workouts"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "name": "Treino Sem Exercícios",
+          "type": "strength",
+          "duration": 60,
+          "exercises": []
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: Authorization
+        value: "Bearer {{ _.token }}"
+    parameters: []
+    authentication: {}
+
+  - _id: req_workout_create_short_name
+    parentId: fld_workouts
+    type: Request
+    name: 27 - [ERRO] Criar treino com nome muito curto
+    url: "{{ _.base_url }}/workouts"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "name": "Ab",
+          "type": "strength",
+          "duration": 60,
+          "exercises": [
+            {
+              "name": "Abdominal",
+              "sets": 3,
+              "reps": 20
+            }
+          ]
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: Authorization
+        value: "Bearer {{ _.token }}"
+    parameters: []
+    authentication: {}
+
+  - _id: req_workout_create_malformed_json
+    parentId: fld_workouts
+    type: Request
+    name: 28 - [ERRO] Criar treino com JSON malformado
+    url: "{{ _.base_url }}/workouts"
+    method: POST
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "name": "Treino JSON Malformado",
+          "type": "strength"
+          "duration": 60,
+          "exercises": [
+            {
+              "name": "Agachamento"
+            }
+          ]
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: Authorization
+        value: "Bearer {{ _.token }}"
+    parameters: []
+    authentication: {}
+
+  - _id: req_workout_get_invalid_id
+    parentId: fld_workouts
+    type: Request
+    name: 29 - [ERRO] Buscar treino com ID inválido
+    url: "{{ _.base_url }}/workouts/id_invalido_123"
+    method: GET
+    body: {}
+    headers:
+      - name: Authorization
+        value: "Bearer {{ _.token }}"
+    parameters: []
+    authentication: {}
+
+  - _id: req_workout_get_other_user
+    parentId: fld_workouts
+    type: Request
+    name: 30 - [ERRO] Buscar treino de outro usuário (403)
+    url: "{{ _.base_url }}/workouts/OTHER_USER_WORKOUT_ID"
+    method: GET
+    body: {}
+    headers:
+      - name: Authorization
+        value: "Bearer {{ _.token }}"
+    parameters: []
+    authentication: {}
+
+  - _id: req_workout_update_other_user
+    parentId: fld_workouts
+    type: Request
+    name: 31 - [ERRO] Atualizar treino de outro usuário
+    url: "{{ _.base_url }}/workouts/OTHER_USER_WORKOUT_ID"
+    method: PUT
+    body:
+      mimeType: application/json
+      text: |-
+        {
+          "name": "Tentando hackear",
+          "type": "strength",
+          "duration": 60,
+          "exercises": [
+            {
+              "name": "Hack",
+              "sets": 1,
+              "reps": 1
+            }
+          ]
+        }
+    headers:
+      - name: Content-Type
+        value: application/json
+      - name: Authorization
+        value: "Bearer {{ _.token }}"
+    parameters: []
+    authentication: {}
+
+  - _id: req_workout_delete_other_user
+    parentId: fld_workouts
+    type: Request
+    name: 32 - [ERRO] Deletar treino de outro usuário
+    url: "{{ _.base_url }}/workouts/OTHER_USER_WORKOUT_ID"
+    method: DELETE
+    body: {}
+    headers:
+      - name: Authorization
+        value: "Bearer {{ _.token }}"
+    parameters: []
+    authentication: {}
+
+  - _id: fld_workouts
+    parentId: wrk_main
+    type: RequestGroup
+    name: Registro de Treinos
+    description: Requisições de teste para o CRUD de treinos
+
+  - _id: fld_auth
+    parentId: wrk_main
+    type: RequestGroup
+    name: Autenticação JWT
+    description: Requisições de teste para o sistema de autenticação
+
+  - _id: wrk_main
+    type: Workspace
+    name: JWT Auth Backend
+    description: API de autenticação com JWT
+
+  - _id: env_base
+    parentId: wrk_main
+    type: Environment
+    name: Base Environment
+    data:
+      base_url: https://expert-carnival-q7qx97v5grqqh96j6-3001.app.github.dev
+      token: ""
+
+  - _id: env_production
+    parentId: wrk_main
+    type: Environment
+    name: Production
+    data:
+      base_url: https://seu-dominio-production.com
+      token: ""

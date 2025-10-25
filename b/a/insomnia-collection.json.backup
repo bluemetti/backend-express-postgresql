@@ -1,0 +1,364 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2025-10-19T05:15:00.000Z",
+  "__export_source": "insomnia.desktop.app:v2023.5.8",
+  "resources": [
+    {
+      "_id": "wrk_jwt_auth",
+      "_type": "workspace",
+      "name": "JWT Authentication API",
+      "description": "API completa de autenticação JWT com Node.js + TypeScript + MongoDB",
+      "scope": "collection"
+    },
+    {
+      "_id": "env_base",
+      "_type": "environment",
+      "name": "Base Environment",
+      "data": {
+        "base_url_local": "https://organic-space-meme-7v9xrv7jjvp9cxpj9-3001.app.github.dev",
+        "base_url_atlas": "https://organic-space-meme-7v9xrv7jjvp9cxpj9-3002.app.github.dev",
+        "base_url_production": "https://backend.daviblumetti.tech",
+        "mongo_express_url": "https://organic-space-meme-7v9xrv7jjvp9cxpj9-8081.app.github.dev"
+      },
+      "parentId": "wrk_jwt_auth"
+    },
+    {
+      "_id": "env_local",
+      "_type": "environment",
+      "name": "LOCAL (MongoDB Docker)",
+      "data": {
+        "base_url": "{{ _.base_url_local }}",
+        "token": ""
+      },
+      "parentId": "env_base"
+    },
+    {
+      "_id": "env_atlas",
+      "_type": "environment",
+      "name": "ATLAS (MongoDB Cloud)",
+      "data": {
+        "base_url": "{{ _.base_url_atlas }}",
+        "token": ""
+      },
+      "parentId": "env_base"
+    },
+    {
+      "_id": "env_production",
+      "_type": "environment",
+      "name": "PRODUCTION (Vercel)",
+      "data": {
+        "base_url": "{{ _.base_url_production }}",
+        "token": ""
+      },
+      "parentId": "env_base"
+    },
+    {
+      "_id": "fld_health",
+      "_type": "request_group",
+      "name": "01 - Health Check",
+      "parentId": "wrk_jwt_auth"
+    },
+    {
+      "_id": "req_health",
+      "_type": "request",
+      "name": "Health Check",
+      "method": "GET",
+      "url": "{{ _.base_url }}/health",
+      "headers": [],
+      "body": {},
+      "parentId": "fld_health",
+      "description": "Verifica o status da API e conexão com banco de dados"
+    },
+    {
+      "_id": "fld_register",
+      "_type": "request_group",
+      "name": "02 - Register (Cadastro)",
+      "parentId": "wrk_jwt_auth"
+    },
+    {
+      "_id": "req_register_success",
+      "_type": "request",
+      "name": "Register - Success",
+      "method": "POST",
+      "url": "{{ _.base_url }}/register",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"João Silva\",\n  \"email\": \"joao.silva@email.com\",\n  \"password\": \"Senha@123\"\n}"
+      },
+      "parentId": "fld_register",
+      "description": "✅ Cadastro com sucesso"
+    },
+    {
+      "_id": "req_register_duplicate",
+      "_type": "request",
+      "name": "Register - Duplicate Email",
+      "method": "POST",
+      "url": "{{ _.base_url }}/register",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"João Silva\",\n  \"email\": \"joao.silva@email.com\",\n  \"password\": \"Senha@123\"\n}"
+      },
+      "parentId": "fld_register",
+      "description": "❌ Email já cadastrado (422)"
+    },
+    {
+      "_id": "req_register_invalid_password",
+      "_type": "request",
+      "name": "Register - Invalid Password",
+      "method": "POST",
+      "url": "{{ _.base_url }}/register",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Maria Santos\",\n  \"email\": \"maria.santos@email.com\",\n  \"password\": \"123\"\n}"
+      },
+      "parentId": "fld_register",
+      "description": "❌ Senha inválida - mínimo 8 caracteres (422)"
+    },
+    {
+      "_id": "req_register_invalid_email",
+      "_type": "request",
+      "name": "Register - Invalid Email",
+      "method": "POST",
+      "url": "{{ _.base_url }}/register",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Pedro Oliveira\",\n  \"email\": \"email-invalido\",\n  \"password\": \"Senha@123\"\n}"
+      },
+      "parentId": "fld_register",
+      "description": "❌ Email inválido (422)"
+    },
+    {
+      "_id": "req_register_malformed",
+      "_type": "request",
+      "name": "Register - Malformed JSON",
+      "method": "POST",
+      "url": "{{ _.base_url }}/register",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"name\": \"Carlos Santos\",\n  \"email\": \"carlos@email.com\"\n  \"password\": \"Senha@123\"\n}"
+      },
+      "parentId": "fld_register",
+      "description": "❌ JSON malformado (400)"
+    },
+    {
+      "_id": "fld_login",
+      "_type": "request_group",
+      "name": "03 - Login",
+      "parentId": "wrk_jwt_auth"
+    },
+    {
+      "_id": "req_login_success",
+      "_type": "request",
+      "name": "Login - Success",
+      "method": "POST",
+      "url": "{{ _.base_url }}/login",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"joao.silva@email.com\",\n  \"password\": \"Senha@123\"\n}"
+      },
+      "parentId": "fld_login",
+      "description": "✅ Login com sucesso - Copie o token retornado!"
+    },
+    {
+      "_id": "req_login_invalid_password",
+      "_type": "request",
+      "name": "Login - Invalid Password",
+      "method": "POST",
+      "url": "{{ _.base_url }}/login",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"joao.silva@email.com\",\n  \"password\": \"SenhaErrada@123\"\n}"
+      },
+      "parentId": "fld_login",
+      "description": "❌ Senha incorreta (401)"
+    },
+    {
+      "_id": "req_login_user_not_found",
+      "_type": "request",
+      "name": "Login - User Not Found",
+      "method": "POST",
+      "url": "{{ _.base_url }}/login",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"usuario.inexistente@email.com\",\n  \"password\": \"Senha@123\"\n}"
+      },
+      "parentId": "fld_login",
+      "description": "❌ Usuário não encontrado (404)"
+    },
+    {
+      "_id": "req_login_invalid_email",
+      "_type": "request",
+      "name": "Login - Invalid Email Format",
+      "method": "POST",
+      "url": "{{ _.base_url }}/login",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"email-invalido\",\n  \"password\": \"Senha@123\"\n}"
+      },
+      "parentId": "fld_login",
+      "description": "❌ Email inválido (422)"
+    },
+    {
+      "_id": "req_login_malformed",
+      "_type": "request",
+      "name": "Login - Malformed JSON",
+      "method": "POST",
+      "url": "{{ _.base_url }}/login",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"email\": \"joao.silva@email.com\"\n  \"password\": \"Senha@123\"\n}"
+      },
+      "parentId": "fld_login",
+      "description": "❌ JSON malformado (400)"
+    },
+    {
+      "_id": "fld_protected",
+      "_type": "request_group",
+      "name": "04 - Protected Route",
+      "parentId": "wrk_jwt_auth"
+    },
+    {
+      "_id": "req_protected_valid",
+      "_type": "request",
+      "name": "Protected - Valid Token",
+      "method": "GET",
+      "url": "{{ _.base_url }}/protected",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{ _.token }}"
+        }
+      ],
+      "body": {},
+      "parentId": "fld_protected",
+      "description": "✅ Acesso com token válido - Cole o token obtido no login na variável 'token' do ambiente"
+    },
+    {
+      "_id": "req_protected_no_token",
+      "_type": "request",
+      "name": "Protected - No Token",
+      "method": "GET",
+      "url": "{{ _.base_url }}/protected",
+      "headers": [],
+      "body": {},
+      "parentId": "fld_protected",
+      "description": "❌ Sem token (401)"
+    },
+    {
+      "_id": "req_protected_invalid_token",
+      "_type": "request",
+      "name": "Protected - Invalid Token",
+      "method": "GET",
+      "url": "{{ _.base_url }}/protected",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer token.invalido.aqui"
+        }
+      ],
+      "body": {},
+      "parentId": "fld_protected",
+      "description": "❌ Token inválido (401)"
+    },
+    {
+      "_id": "fld_mongo_express",
+      "_type": "request_group",
+      "name": "05 - Mongo Express (Interface Web)",
+      "parentId": "wrk_jwt_auth"
+    },
+    {
+      "_id": "req_mongo_express_home",
+      "_type": "request",
+      "name": "Mongo Express - Home",
+      "method": "GET",
+      "url": "{{ _.mongo_express_url }}",
+      "headers": [],
+      "body": {},
+      "parentId": "fld_mongo_express",
+      "description": "Interface web do MongoDB Local - Login: admin / admin123"
+    },
+    {
+      "_id": "req_mongo_express_db",
+      "_type": "request",
+      "name": "Mongo Express - Database",
+      "method": "GET",
+      "url": "{{ _.mongo_express_url }}/db/jwt-auth-db",
+      "headers": [],
+      "body": {},
+      "parentId": "fld_mongo_express",
+      "description": "Visualizar banco de dados jwt-auth-db"
+    },
+    {
+      "_id": "req_mongo_express_users",
+      "_type": "request",
+      "name": "Mongo Express - Users Collection",
+      "method": "GET",
+      "url": "{{ _.mongo_express_url }}/db/jwt-auth-db/users",
+      "headers": [],
+      "body": {},
+      "parentId": "fld_mongo_express",
+      "description": "Visualizar coleção de usuários no MongoDB Local"
+    }
+  ]
+}

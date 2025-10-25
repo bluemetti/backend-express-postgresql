@@ -1,0 +1,103 @@
+version: '3.8'
+
+services:
+  # MongoDB Database LOCAL (para visualização no Mongo Express)
+  mongodb:
+    image: mongo:7.0
+    container_name: jwt-auth-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_DATABASE: jwt-auth-db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    networks:
+      - jwt-auth-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  # Mongo Express - Web UI for MongoDB LOCAL
+  mongo-express:
+    image: mongo-express:latest
+    container_name: jwt-auth-mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin123
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - jwt-auth-network
+
+  # API conectada ao MongoDB LOCAL (porta 3001)
+  app-local:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jwt-auth-app-local
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      MONGODB_URI: mongodb://mongodb:27017/jwt-auth-db
+      JWT_SECRET: ${JWT_SECRET:-e64c60b2ce4429ceb041a6f19058f726f55f0eb56b452fcba2ac4e32957fa5c9}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
+      BCRYPT_SALT_ROUNDS: ${BCRYPT_SALT_ROUNDS:-12}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - jwt-auth-network
+    volumes:
+      - logs:/app/logs
+
+  # API conectada ao MongoDB ATLAS (porta 3002)
+  app-atlas:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jwt-auth-app-atlas
+    restart: unless-stopped
+    ports:
+      - "3002:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      MONGODB_URI_PRODUCTION: ${MONGODB_URI_PRODUCTION}
+      JWT_SECRET: ${JWT_SECRET:-e64c60b2ce4429ceb041a6f19058f726f55f0eb56b452fcba2ac4e32957fa5c9}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
+      BCRYPT_SALT_ROUNDS: ${BCRYPT_SALT_ROUNDS:-12}
+    networks:
+      - jwt-auth-network
+    volumes:
+      - logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  jwt-auth-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local
+  logs:
+    driver: local
