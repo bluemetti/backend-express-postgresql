@@ -7,8 +7,8 @@
     {
       "_id": "wrk_jwt_auth",
       "_type": "workspace",
-      "name": "JWT Authentication API",
-      "description": "API completa de autenticação JWT com Node.js + TypeScript + MongoDB",
+      "name": "JWT Authentication API + Workout Tracker",
+      "description": "API completa de autenticação JWT com Node.js + TypeScript + PostgreSQL + TypeORM",
       "scope": "collection"
     },
     {
@@ -34,7 +34,7 @@
     {
       "_id": "env_atlas",
       "_type": "environment",
-      "name": "PRODUCTION - Atlas (porta 3002)",
+      "name": "PRODUCTION - Neon Cloud (porta 3002)",
       "data": {
         "base_url": "https://expert-carnival-q7qx97v5grqqh96j6-3002.app.github.dev",
         "token": ""
