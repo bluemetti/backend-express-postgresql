@@ -1,45 +1,46 @@
 version: '3.8'
 
 services:
-  # MongoDB Database LOCAL (para visualização no Mongo Express)
-  mongodb:
-    image: mongo:7.0
-    container_name: jwt-auth-mongodb
+  # PostgreSQL Database LOCAL
+  postgres:
+    image: postgres:16-alpine
+    container_name: jwt-auth-postgres
     restart: unless-stopped
     environment:
-      MONGO_INITDB_DATABASE: jwt-auth-db
+      POSTGRES_DB: jwt_auth_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
     ports:
-      - "27017:27017"
+      - "5432:5432"
     volumes:
-      - mongodb_data:/data/db
-      - mongodb_config:/data/configdb
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - jwt-auth-network
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 40s
+      start_period: 10s
 
-  # Mongo Express - Web UI for MongoDB LOCAL
-  mongo-express:
-    image: mongo-express:latest
-    container_name: jwt-auth-mongo-express
+  # pgAdmin - Web UI for PostgreSQL LOCAL
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: jwt-auth-pgadmin
     restart: unless-stopped
     ports:
-      - "8081:8081"
+      - "8081:80"
     environment:
-      ME_CONFIG_MONGODB_URL: mongodb://mongodb:27017/
-      ME_CONFIG_BASICAUTH_USERNAME: admin
-      ME_CONFIG_BASICAUTH_PASSWORD: admin123
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
     depends_on:
-      mongodb:
+      postgres:
         condition: service_healthy
     networks:
       - jwt-auth-network
 
-  # API conectada ao MongoDB LOCAL (porta 3001)
+  # API conectada ao PostgreSQL LOCAL (porta 3001)
   app-local:
     build:
       context: .
@@ -51,31 +52,36 @@ services:
     environment:
       NODE_ENV: development
       PORT: 3001
-      MONGODB_URI: mongodb://mongodb:27017/jwt-auth-db
+      DB_TYPE: postgres
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres123
+      DB_DATABASE: jwt_auth_db
       JWT_SECRET: ${JWT_SECRET:-e64c60b2ce4429ceb041a6f19058f726f55f0eb56b452fcba2ac4e32957fa5c9}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
       BCRYPT_SALT_ROUNDS: ${BCRYPT_SALT_ROUNDS:-12}
     depends_on:
-      mongodb:
+      postgres:
         condition: service_healthy
     networks:
       - jwt-auth-network
     volumes:
       - logs:/app/logs
 
-  # API conectada ao MongoDB ATLAS (porta 3002)
-  app-atlas:
+  # API conectada ao PostgreSQL na NUVEM (porta 3002)
+  app-cloud:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: jwt-auth-app-atlas
+    container_name: jwt-auth-app-cloud
     restart: unless-stopped
     ports:
       - "3002:3001"
     environment:
       NODE_ENV: production
       PORT: 3001
-      MONGODB_URI_PRODUCTION: ${MONGODB_URI_PRODUCTION}
+      DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET:-e64c60b2ce4429ceb041a6f19058f726f55f0eb56b452fcba2ac4e32957fa5c9}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
       BCRYPT_SALT_ROUNDS: ${BCRYPT_SALT_ROUNDS:-12}
@@ -95,9 +101,7 @@ networks:
     driver: bridge
 
 volumes:
-  mongodb_data:
-    driver: local
-  mongodb_config:
+  postgres_data:
     driver: local
   logs:
     driver: local

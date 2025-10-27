@@ -17,7 +17,7 @@ export class WorkoutController {
       res.status(201).json({
         message: 'Workout created successfully',
         workout: {
-          id: workout._id,
+          id: workout.id,
           name: workout.name,
           type: workout.type,
           duration: workout.duration,
@@ -65,7 +65,7 @@ export class WorkoutController {
         message: 'Workouts retrieved successfully',
         count: workouts.length,
         workouts: workouts.map(workout => ({
-          id: workout._id,
+          id: workout.id,
           name: workout.name,
           type: workout.type,
           duration: workout.duration,
@@ -109,7 +109,7 @@ export class WorkoutController {
       res.status(200).json({
         message: 'Workout retrieved successfully',
         workout: {
-          id: workout._id,
+          id: workout.id,
           name: workout.name,
           type: workout.type,
           duration: workout.duration,
@@ -154,7 +154,7 @@ export class WorkoutController {
       res.status(200).json({
         message: 'Workout updated successfully',
         workout: {
-          id: workout._id,
+          id: workout.id,
           name: workout.name,
           type: workout.type,
           duration: workout.duration,
@@ -210,7 +210,7 @@ export class WorkoutController {
       res.status(200).json({
         message: 'Workout updated successfully',
         workout: {
-          id: workout._id,
+          id: workout.id,
           name: workout.name,
           type: workout.type,
           duration: workout.duration,

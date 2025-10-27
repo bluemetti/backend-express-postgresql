@@ -1,5 +1,6 @@
-import { Workout, IWorkout } from '../models/Workout';
-import mongoose from 'mongoose';
+import { Workout } from '../models/Workout';
+import { AppDataSource } from '../database/connection';
+import { Between, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 
 export interface CreateWorkoutData {
   name: string;
@@ -52,19 +53,21 @@ export class WorkoutService {
   static async createWorkout(
     workoutData: CreateWorkoutData,
     userId: string
-  ): Promise<IWorkout> {
+  ): Promise<Workout> {
     try {
       console.log(`🔄 Creating workout for user: ${userId}`);
 
-      const workout = new Workout({
+      const workoutRepository = AppDataSource.getRepository(Workout);
+      
+      const workout = workoutRepository.create({
         ...workoutData,
-        userId: new mongoose.Types.ObjectId(userId),
+        userId,
         date: workoutData.date || new Date()
       });
 
-      await workout.save();
+      await workoutRepository.save(workout);
 
-      console.log(`✅ Workout created successfully: ${workout._id}`);
+      console.log(`✅ Workout created successfully: ${workout.id}`);
       return workout;
     } catch (error) {
       console.error('❌ Error creating workout:', error);
@@ -78,50 +81,67 @@ export class WorkoutService {
   static async getWorkouts(
     userId: string,
     filters?: WorkoutFilters
-  ): Promise<IWorkout[]> {
+  ): Promise<Workout[]> {
     try {
       console.log(`🔄 Fetching workouts for user: ${userId}`);
 
-      const query: any = { userId: new mongoose.Types.ObjectId(userId) };
+      const workoutRepository = AppDataSource.getRepository(Workout);
+      const queryBuilder = workoutRepository.createQueryBuilder('workout')
+        .where('workout.userId = :userId', { userId });
 
       // Apply filters
       if (filters?.type) {
-        query.type = filters.type;
+        queryBuilder.andWhere('workout.type = :type', { type: filters.type });
       }
 
-      if (filters?.dateFrom || filters?.dateTo) {
-        query.date = {};
-        if (filters.dateFrom) {
-          query.date.$gte = new Date(filters.dateFrom);
-        }
-        if (filters.dateTo) {
-          query.date.$lte = new Date(filters.dateTo);
-        }
+      if (filters?.dateFrom && filters?.dateTo) {
+        queryBuilder.andWhere('workout.date BETWEEN :dateFrom AND :dateTo', {
+          dateFrom: new Date(filters.dateFrom),
+          dateTo: new Date(filters.dateTo)
+        });
+      } else if (filters?.dateFrom) {
+        queryBuilder.andWhere('workout.date >= :dateFrom', {
+          dateFrom: new Date(filters.dateFrom)
+        });
+      } else if (filters?.dateTo) {
+        queryBuilder.andWhere('workout.date <= :dateTo', {
+          dateTo: new Date(filters.dateTo)
+        });
       }
 
-      if (filters?.minDuration || filters?.maxDuration) {
-        query.duration = {};
-        if (filters.minDuration) {
-          query.duration.$gte = parseInt(filters.minDuration);
-        }
-        if (filters.maxDuration) {
-          query.duration.$lte = parseInt(filters.maxDuration);
-        }
+      if (filters?.minDuration && filters?.maxDuration) {
+        queryBuilder.andWhere('workout.duration BETWEEN :minDuration AND :maxDuration', {
+          minDuration: parseInt(filters.minDuration),
+          maxDuration: parseInt(filters.maxDuration)
+        });
+      } else if (filters?.minDuration) {
+        queryBuilder.andWhere('workout.duration >= :minDuration', {
+          minDuration: parseInt(filters.minDuration)
+        });
+      } else if (filters?.maxDuration) {
+        queryBuilder.andWhere('workout.duration <= :maxDuration', {
+          maxDuration: parseInt(filters.maxDuration)
+        });
       }
 
-      if (filters?.minCalories || filters?.maxCalories) {
-        query.calories = {};
-        if (filters.minCalories) {
-          query.calories.$gte = parseInt(filters.minCalories);
-        }
-        if (filters.maxCalories) {
-          query.calories.$lte = parseInt(filters.maxCalories);
-        }
+      if (filters?.minCalories && filters?.maxCalories) {
+        queryBuilder.andWhere('workout.calories BETWEEN :minCalories AND :maxCalories', {
+          minCalories: parseInt(filters.minCalories),
+          maxCalories: parseInt(filters.maxCalories)
+        });
+      } else if (filters?.minCalories) {
+        queryBuilder.andWhere('workout.calories >= :minCalories', {
+          minCalories: parseInt(filters.minCalories)
+        });
+      } else if (filters?.maxCalories) {
+        queryBuilder.andWhere('workout.calories <= :maxCalories', {
+          maxCalories: parseInt(filters.maxCalories)
+        });
       }
 
-      const workouts = await Workout.find(query)
-        .sort({ date: -1 })
-        .exec();
+      const workouts = await queryBuilder
+        .orderBy('workout.date', 'DESC')
+        .getMany();
 
       console.log(`✅ Found ${workouts.length} workout(s) for user: ${userId}`);
       return workouts;
@@ -137,19 +157,18 @@ export class WorkoutService {
   static async getWorkoutById(
     workoutId: string,
     userId: string
-  ): Promise<IWorkout | null> {
+  ): Promise<Workout | null> {
     try {
       console.log(`🔄 Fetching workout ${workoutId} for user: ${userId}`);
 
-      if (!mongoose.Types.ObjectId.isValid(workoutId)) {
-        console.log(`⚠️ Invalid workout ID format: ${workoutId}`);
-        return null;
-      }
-
-      const workout = await Workout.findOne({
-        _id: new mongoose.Types.ObjectId(workoutId),
-        userId: new mongoose.Types.ObjectId(userId)
-      }).exec();
+      const workoutRepository = AppDataSource.getRepository(Workout);
+      
+      const workout = await workoutRepository.findOne({
+        where: {
+          id: workoutId,
+          userId
+        }
+      });
 
       if (!workout) {
         console.log(`⚠️ Workout not found or access denied: ${workoutId}`);
@@ -171,34 +190,31 @@ export class WorkoutService {
     workoutId: string,
     userId: string,
     workoutData: CreateWorkoutData
-  ): Promise<IWorkout | null> {
+  ): Promise<Workout | null> {
     try {
       console.log(`🔄 Updating workout ${workoutId} for user: ${userId}`);
 
-      if (!mongoose.Types.ObjectId.isValid(workoutId)) {
-        console.log(`⚠️ Invalid workout ID format: ${workoutId}`);
-        return null;
-      }
-
-      const workout = await Workout.findOneAndUpdate(
-        {
-          _id: new mongoose.Types.ObjectId(workoutId),
-          userId: new mongoose.Types.ObjectId(userId)
-        },
-        {
-          ...workoutData,
-          date: workoutData.date || new Date()
-        },
-        {
-          new: true,
-          runValidators: true
+      const workoutRepository = AppDataSource.getRepository(Workout);
+      
+      const workout = await workoutRepository.findOne({
+        where: {
+          id: workoutId,
+          userId
         }
-      ).exec();
+      });
 
       if (!workout) {
         console.log(`⚠️ Workout not found or access denied: ${workoutId}`);
         return null;
       }
+
+      // Update all fields
+      Object.assign(workout, {
+        ...workoutData,
+        date: workoutData.date || new Date()
+      });
+
+      await workoutRepository.save(workout);
 
       console.log(`✅ Workout updated successfully: ${workoutId}`);
       return workout;
@@ -215,31 +231,28 @@ export class WorkoutService {
     workoutId: string,
     userId: string,
     workoutData: UpdateWorkoutData
-  ): Promise<IWorkout | null> {
+  ): Promise<Workout | null> {
     try {
       console.log(`🔄 Patching workout ${workoutId} for user: ${userId}`);
 
-      if (!mongoose.Types.ObjectId.isValid(workoutId)) {
-        console.log(`⚠️ Invalid workout ID format: ${workoutId}`);
-        return null;
-      }
-
-      const workout = await Workout.findOneAndUpdate(
-        {
-          _id: new mongoose.Types.ObjectId(workoutId),
-          userId: new mongoose.Types.ObjectId(userId)
-        },
-        { $set: workoutData },
-        {
-          new: true,
-          runValidators: true
+      const workoutRepository = AppDataSource.getRepository(Workout);
+      
+      const workout = await workoutRepository.findOne({
+        where: {
+          id: workoutId,
+          userId
         }
-      ).exec();
+      });
 
       if (!workout) {
         console.log(`⚠️ Workout not found or access denied: ${workoutId}`);
         return null;
       }
+
+      // Update only provided fields
+      Object.assign(workout, workoutData);
+
+      await workoutRepository.save(workout);
 
       console.log(`✅ Workout patched successfully: ${workoutId}`);
       return workout;
@@ -259,17 +272,14 @@ export class WorkoutService {
     try {
       console.log(`🔄 Deleting workout ${workoutId} for user: ${userId}`);
 
-      if (!mongoose.Types.ObjectId.isValid(workoutId)) {
-        console.log(`⚠️ Invalid workout ID format: ${workoutId}`);
-        return false;
-      }
+      const workoutRepository = AppDataSource.getRepository(Workout);
+      
+      const result = await workoutRepository.delete({
+        id: workoutId,
+        userId
+      });
 
-      const result = await Workout.findOneAndDelete({
-        _id: new mongoose.Types.ObjectId(workoutId),
-        userId: new mongoose.Types.ObjectId(userId)
-      }).exec();
-
-      if (!result) {
+      if (!result.affected || result.affected === 0) {
         console.log(`⚠️ Workout not found or access denied: ${workoutId}`);
         return false;
       }
@@ -289,35 +299,36 @@ export class WorkoutService {
     try {
       console.log(`🔄 Fetching workout statistics for user: ${userId}`);
 
-      const stats = await Workout.aggregate([
-        {
-          $match: { userId: new mongoose.Types.ObjectId(userId) }
-        },
-        {
-          $group: {
-            _id: null,
-            totalWorkouts: { $sum: 1 },
-            totalDuration: { $sum: '$duration' },
-            totalCalories: { $sum: '$calories' },
-            avgDuration: { $avg: '$duration' },
-            avgCalories: { $avg: '$calories' },
-            workoutsByType: {
-              $push: {
-                type: '$type',
-                count: 1
-              }
-            }
-          }
-        }
-      ]);
+      const workoutRepository = AppDataSource.getRepository(Workout);
+      
+      const stats = await workoutRepository
+        .createQueryBuilder('workout')
+        .select('COUNT(*)', 'totalWorkouts')
+        .addSelect('SUM(workout.duration)', 'totalDuration')
+        .addSelect('SUM(workout.calories)', 'totalCalories')
+        .addSelect('AVG(workout.duration)', 'avgDuration')
+        .addSelect('AVG(workout.calories)', 'avgCalories')
+        .where('workout.userId = :userId', { userId })
+        .getRawOne();
+
+      // Get workouts by type
+      const workoutsByType = await workoutRepository
+        .createQueryBuilder('workout')
+        .select('workout.type', 'type')
+        .addSelect('COUNT(*)', 'count')
+        .where('workout.userId = :userId', { userId })
+        .groupBy('workout.type')
+        .getRawMany();
 
       console.log(`✅ Workout statistics fetched for user: ${userId}`);
-      return stats[0] || {
-        totalWorkouts: 0,
-        totalDuration: 0,
-        totalCalories: 0,
-        avgDuration: 0,
-        avgCalories: 0
+      
+      return {
+        totalWorkouts: parseInt(stats?.totalWorkouts || '0'),
+        totalDuration: parseFloat(stats?.totalDuration || '0'),
+        totalCalories: parseFloat(stats?.totalCalories || '0'),
+        avgDuration: parseFloat(stats?.avgDuration || '0'),
+        avgCalories: parseFloat(stats?.avgCalories || '0'),
+        workoutsByType
       };
     } catch (error) {
       console.error('❌ Error fetching workout statistics:', error);

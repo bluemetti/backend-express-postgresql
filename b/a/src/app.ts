@@ -135,12 +135,12 @@ class App {
   }
 
   private async checkDatabaseConnection(): Promise<{ status: string; name?: string }> {
-    const mongoose = (await import('mongoose')).default;
+    const { AppDataSource } = await import('./database/connection');
     
-    if (mongoose.connection.readyState === 1) {
+    if (AppDataSource.isInitialized) {
       return {
         status: 'connected',
-        name: mongoose.connection.name
+        name: AppDataSource.options.database as string
       };
     }
     

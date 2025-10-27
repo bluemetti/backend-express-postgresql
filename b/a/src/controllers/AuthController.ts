@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { AuthService } from '../services/AuthService';
-import { IUser } from '../models/User';
+import { User } from '../models/User';
 
 export class AuthController {
   static async register(req: Request, res: Response): Promise<void> {
@@ -20,7 +20,7 @@ export class AuthController {
         message: 'User registered successfully',
         data: {
           user: {
-            id: user._id,
+            id: user.id,
             name: user.name,
             email: user.email,
             createdAt: user.createdAt
@@ -84,7 +84,7 @@ export class AuthController {
         message: 'Login successful',
         data: {
           user: {
-            id: user._id,
+            id: user.id,
             name: user.name,
             email: user.email,
             createdAt: user.createdAt

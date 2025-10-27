@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
-import { IUser, User } from '../models/User';
+import { User } from '../models/User';
+import { AppDataSource } from '../database/connection';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -46,21 +47,26 @@ export class AuthService {
     }
   }
 
-  static async register(userData: IRegisterData): Promise<{ user: IUser; token: string }> {
+  static async register(userData: IRegisterData): Promise<{ user: User; token: string }> {
     try {
+      const userRepository = AppDataSource.getRepository(User);
+
       // Check if user already exists
-      const existingUser = await User.findOne({ email: userData.email });
+      const existingUser = await userRepository.findOne({ 
+        where: { email: userData.email } 
+      });
+      
       if (existingUser) {
         throw new Error('User with this email already exists');
       }
 
       // Create new user
-      const user = new User(userData);
-      await user.save();
+      const user = userRepository.create(userData);
+      await userRepository.save(user);
 
       // Generate JWT token
       const token = this.generateToken({
-        userId: (user._id as any).toString(),
+        userId: user.id,
         email: user.email
       });
 
@@ -73,10 +79,15 @@ export class AuthService {
     }
   }
 
-  static async login(loginData: ILoginData): Promise<{ user: IUser; token: string }> {
+  static async login(loginData: ILoginData): Promise<{ user: User; token: string }> {
     try {
+      const userRepository = AppDataSource.getRepository(User);
+
       // Find user by email and include password for comparison
-      const user = await User.findOne({ email: loginData.email }).select('+password');
+      const user = await userRepository.findOne({ 
+        where: { email: loginData.email },
+        select: ['id', 'name', 'email', 'password', 'createdAt', 'updatedAt']
+      });
       
       if (!user) {
         console.log(`⚠️ Login failed: User not found - ${loginData.email}`);
@@ -92,7 +103,7 @@ export class AuthService {
 
       // Generate JWT token
       const token = this.generateToken({
-        userId: (user._id as any).toString(),
+        userId: user.id,
         email: user.email
       });
 
@@ -108,9 +119,10 @@ export class AuthService {
     }
   }
 
-  static async getUserById(userId: string): Promise<IUser | null> {
+  static async getUserById(userId: string): Promise<User | null> {
     try {
-      return await User.findById(userId);
+      const userRepository = AppDataSource.getRepository(User);
+      return await userRepository.findOne({ where: { id: userId } });
     } catch (error) {
       console.error('❌ Error fetching user:', error);
       throw new Error('User not found');

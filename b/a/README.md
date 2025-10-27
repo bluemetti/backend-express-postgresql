@@ -5,7 +5,7 @@ Vídeo: https://backend.daviblumetti.tech/
 
 # 🔐 JWT Authentication Backend + 💪 Workout Tracker
 
-Backend completo de autenticação com Node.js, TypeScript, Express, MongoDB e JWT, **agora com sistema de registro de treinos (Workout Tracker)**.
+Backend completo de autenticação com Node.js, TypeScript, Express, **PostgreSQL** e JWT, **agora com sistema de registro de treinos (Workout Tracker)**.
 
 ## 📋 Índice
 
@@ -51,8 +51,8 @@ Todas as rotas de treinos são **protegidas por JWT** e respeitam o isolamento d
 - **Node.js** 20+
 - **TypeScript** 5.9+
 - **Express** 5.1+
-- **MongoDB** 7.0+
-- **Mongoose** 8.19+
+- **PostgreSQL** 16+
+- **TypeORM** 0.3.27+
 - **JWT** (jsonwebtoken)
 - **Bcrypt** para hash de senhas
 - **Docker** & **Docker Compose**
@@ -68,7 +68,7 @@ a/
 │   ├── services/         # Serviços (lógica de negócio)
 │   │   ├── AuthService.ts
 │   │   └── WorkoutService.ts       # NOVO: Service de treinos
-│   ├── models/           # Modelos do MongoDB
+│   ├── models/           # Modelos do PostgreSQL (TypeORM)
 │   │   ├── User.ts
 │   │   └── Workout.ts              # NOVO: Model de treinos
 │   ├── middlewares/      # Middlewares (autenticação, validação)
